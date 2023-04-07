@@ -14,46 +14,56 @@ typedef ScrollingDayCalendarBuilder = Widget Function(
 class ScrollingDayCalendar extends StatefulWidget {
   // first date on the pages
   final DateTime startDate;
+
   // last date on the pages
   final DateTime endDate;
+
   // the active date
   final DateTime selectedDate;
+
   // what to do then the date changes
-  final Function onDateChange;
+  final Function? onDateChange;
+
   // page widgets to display
-  final Widget pageItems;
+  final Widget? pageItems;
+
   // date format
-  final String displayDateFormat;
+  final String? displayDateFormat;
+
   // date style
-  final TextStyle dateStyle;
+  final TextStyle? dateStyle;
+
   // background color for date container
-  final Color dateBackgroundColor;
+  final Color? dateBackgroundColor;
+
   // forward icon
-  final IconData forwardIcon;
+  final IconData? forwardIcon;
+
   // back icon
-  final IconData backwardIcon;
+  final IconData? backwardIcon;
+
   // page change duration
   final Duration pageChangeDuration;
 
-  final Map<String, Widget> widgets;
+  final Map<String, Widget>? widgets;
   final Widget noItemsWidget;
-  final String widgetKeyFormat;
+  final String? widgetKeyFormat;
 
   ScrollingDayCalendar({
-    @required this.pageItems,
-    @required this.startDate,
-    @required this.endDate,
-    @required this.selectedDate,
+    required this.pageItems,
+    required this.startDate,
+    required this.endDate,
+    required this.selectedDate,
     this.onDateChange,
     this.widgets,
-    this.noItemsWidget,
+    this.noItemsWidget = const Offstage(),
     this.widgetKeyFormat,
     this.displayDateFormat,
     this.dateStyle,
     this.dateBackgroundColor,
     this.forwardIcon,
     this.backwardIcon,
-    this.pageChangeDuration,
+    this.pageChangeDuration = const Duration(microseconds: 700),
   });
 
   @override
@@ -61,14 +71,14 @@ class ScrollingDayCalendar extends StatefulWidget {
 }
 
 class _ScrollingDayCalendarState extends State<ScrollingDayCalendar> {
-  PageController _pageController;
-  int _totalPages;
-  int _currentPage;
-  int _previousPage;
-  DateTime _selectedDate;
+  late PageController _pageController;
+  late int _totalPages;
+  late int _currentPage;
+  late int _previousPage;
+  late DateTime _selectedDate;
 
   _onPageChange(direction) {
-    _currentPage = _pageController.page.round();
+    _currentPage = _pageController.page?.round() ?? 0;
 
     if (_currentPage > _previousPage) {
       // went forward
@@ -90,17 +100,17 @@ class _ScrollingDayCalendarState extends State<ScrollingDayCalendar> {
       });
     }
 
-    _previousPage = _pageController.page.round();
+    _previousPage = _pageController.page?.round() ?? 0;
 
     // run page update sent by user
     if (widget.onDateChange != null) {
-      widget.onDateChange(direction, _selectedDate);
+      widget.onDateChange!(direction, _selectedDate);
     }
   }
 
   Widget _buildPage(index) {
     if (widget.pageItems != null) {
-      return widget.pageItems;
+      return widget.pageItems!;
     }
     DateTime dateTime = widget.startDate;
     index = index + 1;
@@ -108,8 +118,8 @@ class _ScrollingDayCalendarState extends State<ScrollingDayCalendar> {
     dateTime = widget.startDate.add(Duration(days: index));
     String key = DateFormat(widget.widgetKeyFormat).format(dateTime);
 
-    if (widget.widgets != null && widget.widgets.containsKey(key)) {
-      return widget.widgets[key];
+    if (widget.widgets != null && widget.widgets!.containsKey(key)) {
+      return widget.widgets![key]!;
     }
 
     return widget.noItemsWidget;
@@ -160,9 +170,7 @@ class _ScrollingDayCalendarState extends State<ScrollingDayCalendar> {
                 child: MaterialButton(
                   onPressed: () {
                     _pageController.previousPage(
-                      duration: widget.pageChangeDuration != null
-                          ? widget.pageChangeDuration
-                          : Duration(microseconds: 700),
+                      duration: widget.pageChangeDuration,
                       curve: Curves.easeIn,
                     );
                   },
@@ -211,9 +219,7 @@ class _ScrollingDayCalendarState extends State<ScrollingDayCalendar> {
                 child: MaterialButton(
                   onPressed: () {
                     _pageController.nextPage(
-                      duration: widget.pageChangeDuration != null
-                          ? widget.pageChangeDuration
-                          : Duration(milliseconds: 700),
+                      duration: widget.pageChangeDuration,
                       curve: Curves.easeIn,
                     );
                   },
@@ -232,7 +238,8 @@ class _ScrollingDayCalendarState extends State<ScrollingDayCalendar> {
           child: PageView.builder(
             controller: _pageController,
             scrollDirection: Axis.horizontal,
-            itemCount: _totalPages, // Can be null
+            itemCount: _totalPages,
+            // Can be null
             onPageChanged: (direction) => _onPageChange(direction),
             itemBuilder: (context, index) {
               return _buildPage(index);
